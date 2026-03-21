@@ -1,4 +1,4 @@
-# Copyright (C) 2026 qaotyk_dev
+﻿# Copyright (C) 2026 qaotyk_dev
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@
 # functional script, but for now, it's a basic example of PowerShell usage.
 #
 
-# Declare ruined variables
-param(
-    [int]$Count = 10,
-    [string]$FileName = "upc.txt"
-)
+# The prefix 7503645 is used for initial testing and will not be included in the final version.
+
+# Declare ruined variables. Ask for numbers and file name
+    $Count = Read-Host "¿Cuantos codigos UPC de 13 digitos deseas generar?"
+    $FileName = Read-Host "Nombre del archivo de salida (ejemplo: UPC-A.txt)"
 
 function Get-UPC($seq) {
 # Prefix 7 digits
@@ -69,15 +69,20 @@ function Validate-UPC($upc) {
 }
 
 "Generando $Count codigos UPC-A con prefijo 7503742..." | Out-File $FileName
+$validCount = 0
+$invalidCount = 0
+
 for ($n=1; $n -le $Count; $n++) {
     $upc = Get-UPC $n
     $valid = Validate-UPC $upc
     if ($valid) {
         "Codigo valido ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
+        $validCount++
     } else {
         "Codigo invalido ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
+        $invalidCount++
     }
-
-    "UPC generado ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
 }
+
+"Resumen: $validCount válidos, $invalidCount inválidos" | Tee-Object -FilePath $FileName -Append
 Write-Host "Resultados guardados en $FileName"
