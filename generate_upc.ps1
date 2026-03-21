@@ -99,3 +99,6 @@ for ($n=1; $n -le $Count; $n++) {
 "Resumen: $validCount válidos, $invalidCount inválidos" | Tee-Object -FilePath $FileName -Append
 Write-Host "Resultados guardados en $FileName"
 Write-Host "Último número guardado en ${CounterFile}: $newLastSeq"
+
+# Open the saved file
+Start-Process notepad.exe $FileName
