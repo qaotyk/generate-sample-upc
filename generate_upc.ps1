@@ -27,17 +27,17 @@ param(
 )
 
 function Get-UPC {
-    # Prefix
+    # Prefix 7 digits
     $prefix = "7503742"
 
-    # Generate the remaining digits up to 11 (excluding the check digit)
-    $missed = 11 - $prefix.Length
+    # Generate 5 random digit up to 12 (excluding the check digit) = 13
+    $missed = 12 - $prefix.Length
     $base = $prefix + (-join (1..$missed | ForEach-Object { Get-Random -Minimum 0 -Maximum 10 }))
 
-    # Calculate check digit
+    # Calculate check digit (13th)
     $sumaImpares = 0
     $sumaPares = 0
-    for ($i=0; $i -lt 11; $i++) {
+    for ($i=0; $i -lt 12; $i++) {
         $d = [int]$base[$i]
         if ($i % 2 -eq 0) { $sumaImpares += $d } else { $sumaPares += $d }
     }
