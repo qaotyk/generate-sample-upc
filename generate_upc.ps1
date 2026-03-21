@@ -27,14 +27,14 @@ param(
 )
 
 function Get-UPC {
-    # Prefix 7 digits
+# Prefix 7 digits
     $prefix = "7503742"
 
-    # Generate 5 random digit up to 12 (excluding the check digit) = 13
+# Generate 5 random digit up to 12 (excluding the check digit) = 13
     $missed = 12 - $prefix.Length
     $base = $prefix + (-join (1..$missed | ForEach-Object { Get-Random -Minimum 0 -Maximum 10 }))
 
-    # Calculate check digit (13th)
+# Calculate check digit (13th)
     $sumaImpares = 0
     $sumaPares = 0
     for ($i=0; $i -lt 12; $i++) {
@@ -47,9 +47,35 @@ function Get-UPC {
     return $base + $digito
 }
 
+# Validate UPC-A Code
+function Validate-UPC($upc) {
+    if ($upc.Length -ne 13) { return $false }
+
+    $base = $upc.Substring(0,12)
+    $check = [int]$upc[12]
+
+    $sumaImpares = 0
+    $sumaPares = 0
+    for ($i=0; $i -lt 12; $i++) {
+        $d = [int]$base[$i]
+        if ($i % 2 -eq 0) { $sumaImpares += $d } else { $sumaPares += $d }
+    }
+    $total = ($sumaImpares * 3) + $sumaPares
+    $digito = (10 - ($total % 10)) % 10
+
+    return ($digito -eq $check)
+}
+
 "Generando $Count codigos UPC-A con prefijo 7503742..." | Out-File $FileName
 for ($n=1; $n -le $Count; $n++) {
     $upc = Get-UPC
+    $valid = Validate-UPC $upc
+    if ($valid) {
+        "Codigo valido ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
+    } else {
+        "Codigo invalido ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
+    }
+
     "UPC generado ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
 }
 Write-Host "Resultados guardados en $FileName"
