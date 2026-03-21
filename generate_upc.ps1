@@ -25,7 +25,16 @@
 # Declare ruined variables. Ask for numbers and file name
     $Count = Read-Host "¿Cuantos codigos UPC de 13 digitos deseas generar?"
     $FileName = Read-Host "Nombre del archivo de salida (ejemplo: UPC-A.txt)"
+    $CounterFile = "configs/counter.txt"
 
+# Read last digit, if exists
+if (Test-Path $CounterFile) {
+    $lastSeq = [int](Get-Content $CounterFile)
+} else {
+    $lastSeq = 0
+}
+
+# Ready to generate UPC-A
 function Get-UPC($seq) {
 # Prefix 7 digits
     $prefix = "7503742"
@@ -52,7 +61,6 @@ function Get-UPC($seq) {
 # Validate UPC-A Code
 function Validate-UPC($upc) {
     if ($upc.Length -ne 13) { return $false }
-
     $base = $upc.Substring(0,12)
     $check = [int]::Parse($upc.Substring(12,1))
 
@@ -84,5 +92,10 @@ for ($n=1; $n -le $Count; $n++) {
     }
 }
 
+# Save the last # used for next exec.
+    $newLastSeq = $lastSeq + $Count
+    $newLastSeq | Out-File $CounterFile -Force
+
 "Resumen: $validCount válidos, $invalidCount inválidos" | Tee-Object -FilePath $FileName -Append
 Write-Host "Resultados guardados en $FileName"
+Write-Host "Último número guardado en ${CounterFile}: $newLastSeq"
