@@ -26,19 +26,21 @@ param(
     [string]$FileName = "upc.txt"
 )
 
-function Get-UPC {
+function Get-UPC($seq) {
 # Prefix 7 digits
     $prefix = "7503742"
 
 # Generate 5 random digit up to 12 (excluding the check digit) = 13
-    $missed = 12 - $prefix.Length
-    $base = $prefix + (-join (1..$missed | ForEach-Object { Get-Random -Minimum 0 -Maximum 10 }))
+    $middle = $seq.ToString("D5")
+
+# 12 digits base
+    $base = $prefix + $middle
 
 # Calculate check digit (13th)
     $sumaImpares = 0
     $sumaPares = 0
     for ($i=0; $i -lt 12; $i++) {
-        $d = [int]$base[$i]
+        $d = [int]::Parse($base.Substring($i,1))
         if ($i % 2 -eq 0) { $sumaImpares += $d } else { $sumaPares += $d }
     }
     $total = ($sumaImpares * 3) + $sumaPares
@@ -52,12 +54,12 @@ function Validate-UPC($upc) {
     if ($upc.Length -ne 13) { return $false }
 
     $base = $upc.Substring(0,12)
-    $check = [int]$upc[12]
+    $check = [int]::Parse($upc.Substring(12,1))
 
     $sumaImpares = 0
     $sumaPares = 0
     for ($i=0; $i -lt 12; $i++) {
-        $d = [int]$base[$i]
+        $d = [int]::Parse($base.Substring($i,1))
         if ($i % 2 -eq 0) { $sumaImpares += $d } else { $sumaPares += $d }
     }
     $total = ($sumaImpares * 3) + $sumaPares
@@ -68,7 +70,7 @@ function Validate-UPC($upc) {
 
 "Generando $Count codigos UPC-A con prefijo 7503742..." | Out-File $FileName
 for ($n=1; $n -le $Count; $n++) {
-    $upc = Get-UPC
+    $upc = Get-UPC $n
     $valid = Validate-UPC $upc
     if ($valid) {
         "Codigo valido ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
