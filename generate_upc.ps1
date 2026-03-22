@@ -20,24 +20,15 @@
 # functional script, but for now, it's a basic example of PowerShell usage.
 #
 
-# The prefix 7503645 is used for initial testing and will not be included in the final version.
+# Call inherit configs
+. .\configs.ps1
 
 # Declare ruined variables. Ask for numbers and file name
     $Count = Read-Host "¿Cuantos codigos UPC de 13 digitos deseas generar?"
     $FileName = Read-Host "Nombre del archivo de salida (ejemplo: UPC-A.txt)"
-    $CounterFile = "configs/counter.txt"
-
-# Read last digit, if exists
-if (Test-Path $CounterFile) {
-    $lastSeq = [int](Get-Content $CounterFile)
-} else {
-    $lastSeq = 0
-}
 
 # Ready to generate UPC-A
-function Get-UPC($seq) {
-# Prefix 7 digits
-    $prefix = "7503742"
+function Get-UPC($seq, $prefix) {
 
 # Generate 5 random digit up to 12 (excluding the check digit) = 13
     $middle = $seq.ToString("D5")
@@ -76,12 +67,13 @@ function Validate-UPC($upc) {
     return ($digito -eq $check)
 }
 
-"Generando $Count codigos UPC-A con prefijo 7503742..." | Out-File $FileName
+"Generando $Count codigos UPC-A con prefijo $prefix y secuencia ordenada" | Out-File $FileName
 $validCount = 0
 $invalidCount = 0
 
 for ($n=1; $n -le $Count; $n++) {
-    $upc = Get-UPC $n
+    $seq = $lastSeq + $n
+    $upc = Get-UPC $seq $prefix
     $valid = Validate-UPC $upc
     if ($valid) {
         "Codigo valido ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
@@ -94,11 +86,12 @@ for ($n=1; $n -le $Count; $n++) {
 
 # Save the last # used for next exec.
     $newLastSeq = $lastSeq + $Count
-    $newLastSeq | Out-File $CounterFile -Force
+    $config.lastSeq = $newlastSeq
+    $config | ConvertTo-Json | Out-File $configFile -Force
 
 "Resumen: $validCount válidos, $invalidCount inválidos" | Tee-Object -FilePath $FileName -Append
 Write-Host "Resultados guardados en $FileName"
-Write-Host "Último número guardado en ${CounterFile}: $newLastSeq"
+Write-Host "Último número guardado en ${newLastSeq}"
 
 # Open the saved file
 Start-Process notepad.exe $FileName
