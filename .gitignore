@@ -1,2 +1,3 @@
 *.txt
+*configs/
 *configs/upc_config.json
