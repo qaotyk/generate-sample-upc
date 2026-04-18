@@ -39,7 +39,6 @@ if (-not (Test-Path $configFile)) {
     $config = Get-Content $configFile | ConvertFrom-Json
     $prefix = $config.prefix
     Set-Variable -Name lastSeq -Value ([int]$config.lastSeq) -Scope Script
-}
 # Ask for change prefix
     $change = Read-Host "¿Desea cambiar los 4 digitos del prefijo actual ($prefix)? (s/n)"
 if ($change -eq "s") {
@@ -54,4 +53,4 @@ if ($change -eq "s") {
     Write-Host "Usando prefijo guardado: $prefix"
     Write-Host "Ultima secuencia registrada: $lastSeq"
 }
-
+}
