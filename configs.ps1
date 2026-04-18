@@ -1,4 +1,4 @@
-# Copyright (C) 2026 qaotyk_dev
+﻿# Copyright (C) 2026 qaotyk_dev
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,17 +27,30 @@
 if (-not (Test-Path $configFile)) {
     $digits = Read-Host "Ingresa los 4 digitos que seguiran despues de 750"
     $prefix = "750" + $digits
-
     $config = @{
-        prefix = $prefix
-        lastSeq = 0
+        "prefix" = $prefix
+        "lastSeq" = 0
+        "runCount" = 0
+        "defaultFileName" = "UPC${prefix}"
 }
     $config | ConvertTo-Json | Out-File $configFile -Force
     Write-Host "Archivo de configuracion creado con prefijo $prefix"
 } else {
     $config = Get-Content $configFile | ConvertFrom-Json
     $prefix = $config.prefix
-    $lastSeq = $config.lastSeq
+    Set-Variable -Name lastSeq -Value ([int]$config.lastSeq) -Scope Script
+}
+# Ask for change prefix
+    $change = Read-Host "¿Desea cambiar los 4 digitos del prefijo actual ($prefix)? (s/n)"
+if ($change -eq "s") {
+        $digits = Read-Host "Ingresa los nuevos 4 dígitos"
+        $prefix = "750" + $digits
+        $config.prefix = $prefix
+        $config.defaultFileName = "UPC${prefix}"
+        $config.lastSeq = 0   # Reset sequency prefix
+        Write-Host "Prefijo actualizado a $prefix y secuencia reiniciada"
+    } else {
+
     Write-Host "Usando prefijo guardado: $prefix"
     Write-Host "Ultima secuencia registrada: $lastSeq"
 }

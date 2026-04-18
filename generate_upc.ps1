@@ -23,15 +23,28 @@
 # Call inherit configs
 . .\configs.ps1
 
-# Declare ruined variables. Ask for numbers and file name
-    $Count = Read-Host "¿Cuantos codigos UPC de 13 digitos deseas generar?"
-    $FileName = Read-Host "Nombre del archivo de salida (ejemplo: UPC-A.txt)"
+# Declare required variables. Ask for numbers and file name
+    [int]$Count = [int](Read-Host "¿Cuantos codigos UPC de 13 digitos deseas generar?")
+
+# Increase count exact
+    $config.runCount++
+    $runCount = [int]$config.runCount
+
+# Namefile generated
+    $FileName = "${config.defaultFileName}_${runCount}.txt"
 
 # Ready to generate UPC-A
 function Get-UPC($seq, $prefix) {
+    $itemLength = 12 - $prefix.Length
+    if ($itemLength -le 0) {
+        throw "Prefijo demasiado largo para UPC-A: longitud de item inválida ($itemLength)."
+    }
+    if ($seq -lt 0 -or $seq -ge [int][math]::Pow(10, $itemLength)) {
+        throw "Secuencia fuera de rango para el prefijo actual. Debe estar entre 0 y $([int][math]::Pow(10, $itemLength) - 1)."
+    }
 
-# Generate 5 random digit up to 12 (excluding the check digit) = 13
-    $middle = $seq.ToString("D5")
+# Generate fixed-length item digits to complete 12 digits before check digit
+    $middle = $seq.ToString("D$itemLength")
 
 # 12 digits base
     $base = $prefix + $middle
@@ -50,7 +63,7 @@ function Get-UPC($seq, $prefix) {
 }
 
 # Validate UPC-A Code
-function Validate-UPC($upc) {
+function Test-UPC($upc) {
     if ($upc.Length -ne 13) { return $false }
     $base = $upc.Substring(0,12)
     $check = [int]::Parse($upc.Substring(12,1))
@@ -74,7 +87,7 @@ $invalidCount = 0
 for ($n=1; $n -le $Count; $n++) {
     $seq = $lastSeq + $n
     $upc = Get-UPC $seq $prefix
-    $valid = Validate-UPC $upc
+    $valid = Test-UPC $upc
     if ($valid) {
         "Codigo valido ${n}: ${upc}" | Tee-Object -FilePath $FileName -Append
         $validCount++
@@ -85,13 +98,14 @@ for ($n=1; $n -le $Count; $n++) {
 }
 
 # Save the last # used for next exec.
-    $newLastSeq = $lastSeq + $Count
-    $config.lastSeq = $newlastSeq
+    [int]$newLastSeq = [int]$lastSeq + $Count
+    $config.lastSeq = $newLastSeq
     $config | ConvertTo-Json | Out-File $configFile -Force
 
 "Resumen: $validCount válidos, $invalidCount inválidos" | Tee-Object -FilePath $FileName -Append
 Write-Host "Resultados guardados en $FileName"
 Write-Host "Último número guardado en ${newLastSeq}"
+Write-Host "Numero de ejecucion: ${runCount}"
 
 # Open the saved file
 Start-Process notepad.exe $FileName
