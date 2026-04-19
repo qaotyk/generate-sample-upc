@@ -23,10 +23,23 @@
 # Set config.json for more customization script
     $ConfigFile = "configs/upc_config.json"
 
+# Check if input 4 digits are valid
+function OnlyDigits {
+    param([string]$Prompt)
+    do {
+        $OnlyGetData = Read-Host $Prompt
+        if ($OnlyGetData -match '^\d{4}$') {
+            return $OnlyGetData
+        } else {
+            Write-Host "Solo puedes ingresar una combinacion de solo 4 digitos (0-9)."
+        }
+    } while ($true)
+}
+
 # If doesn't exist, get attributes
 if (-not (Test-Path $configFile)) {
-    New-Item -Path $configFile -ItemType File -Force | Out-Null
-    $digits = Read-Host "Ingresa los 4 digitos que seguiran despues de 750"
+    New-Item -Path $configFile -ItemType File -Force | Out-Null    
+    $digits = OnlyDigits "Ingresa los 4 digitos que seguiran despues de 750"
     $prefix = "750" + $digits
     $config = @{
         "prefix" = $prefix
@@ -43,7 +56,7 @@ if (-not (Test-Path $configFile)) {
 # Ask for change prefix
     $change = Read-Host "¿Desea cambiar los 4 digitos del prefijo actual ($prefix)? (s/n)"
 if ($change -eq "s") {
-        $digits = Read-Host "Ingresa los nuevos 4 dígitos"
+        $digits = OnlyDigits "Ingresa los nuevos 4 dígitos"
         $prefix = "750" + $digits
         $config.prefix = $prefix
         $config.defaultFileName = "UPC${prefix}"
