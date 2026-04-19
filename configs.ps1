@@ -24,7 +24,8 @@
     $ConfigFile = "configs/upc_config.json"
 
 # If doesn't exist, get attributes
-if (-not (Test-Path "configs/$configFile")) {
+if (-not (Test-Path $configFile)) {
+    New-Item -Path $configFile -ItemType File -Force | Out-Null
     $digits = Read-Host "Ingresa los 4 digitos que seguiran despues de 750"
     $prefix = "750" + $digits
     $config = @{
@@ -33,11 +34,10 @@ if (-not (Test-Path "configs/$configFile")) {
         "runCount" = 0
         "defaultFileName" = "UPC${prefix}"
 }
-    New-Item -Path "configs/$configFile" -ItemType File -Force
-    $config | ConvertTo-Json | Out-File "configs/$configFile" -Force
+    $config | ConvertTo-Json | Out-File "$configFile" -Force
     Write-Host "Archivo de configuracion creado con prefijo $prefix"
 } else {
-    $config = Get-Content "configs/$configFile" | ConvertFrom-Json
+    $config = Get-Content "$configFile" | ConvertFrom-Json
     $prefix = $config.prefix
     Set-Variable -Name lastSeq -Value ([int]$config.lastSeq) -Scope Script
 # Ask for change prefix
